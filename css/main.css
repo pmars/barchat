@@ -1,0 +1,16 @@
+#app {
+    position: relative;
+}
+
+
+.form2{
+    margin-top: 50px;
+}
+
+@media (min-width: 368px) {
+    .form-inline .form-control {
+        display: inline-block;
+        width: auto;
+        vertical-align: middle;
+    }
+}

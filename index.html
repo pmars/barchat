@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>弹幕聊天页面</title>
+  <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/min.css">
+  <link rel="stylesheet" href="/main.css">
+  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+  <script src="/danmu.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h3>弹幕聊天页面</h3>
+    <hr>
+    <div class="inputtext" style="float:left;">
+        <form class="form-inline form2">
+            <input id='text' type='text' style="width:300px"/>
+            <input id='say' type='submit' value='发言' class="btn btn-success"/>
+        </form>
+    </div>
+    <div class="status" style="float:left;margin-left:200px">
+        连接状态 : <span id="message"></span>
+    </div>
+    <div style="clear:both"></div>
+    <hr style="margin:5px 0px">
+    <div id='app'>
+        <div id='danmu'></div>
+    </div>
+    <script>
+    $(function() {
+        var ws = new WebSocket('ws://bs.xiaoh.me:8888/ws');
+        var $message = $('#message');
+
+        console.log('websocket object init over')
+        var height = $(document).height();
+        var width = $(document).width();
+        function random (num) {
+            return parseInt(Math.random() * num);
+        }
+        var colors = ['black', '#1f8dd6', 'rgb(128, 88, 165)', '#5eb95e', '#dd514c', 'rgb(243, 123, 29)', 'rgb(250, 210, 50)'];
+        var sizes = [0, 1];
+
+        var $danmu = $('#danmu');
+        var $input = $('#text');
+        $danmu.danmu({
+            height: height,  //弹幕区高度
+            width: width,
+            top:100,
+            speed: random(2000) + 4000,
+            fontSizeSmall:24,     //小弹幕的字号大小
+            FontSizeBig:36,
+        });  // 初始化
+        $danmu.danmu('danmuStart');  // 启动
+
+        $('#say').on('click', function (e) {
+            e.preventDefault();
+            var color = colors[random(colors.length)];
+            var size = sizes[random(2)];
+            ws.send(JSON.stringify({
+                message: $input.val(),
+                color: color,
+                size: size
+            }));
+            $input.val('');
+        });
+
+        ws.onmessage = function(ev){
+            $message.attr("class", 'label label-info');
+            $message.hide();
+            $message.fadeIn("slow");
+            $message.text('recieved message');
+
+            data = JSON.parse(JSON.parse(ev.data));
+            console.log(data)
+
+            $danmu.danmu("addDanmu", [{
+                text: data.message,
+                color: data.color,
+                size: data.size,
+                position: 0,
+                top: random(200) + 200,
+                time: $danmu.data("nowTime")+1
+            }]);
+        };
+
+        ws.onopen = function(){
+          $message.attr("class", 'label label-success');
+          $message.text('open');
+        };
+        ws.onclose = function(ev){
+          $message.attr("class", 'label label-important');
+          $message.text('closed');
+        };
+        ws.onerror = function(ev){
+          $message.attr("class", 'label label-warning');
+          $message.text('error occurred');
+        };
+    });
+    </script>
+</body>
+</html>
